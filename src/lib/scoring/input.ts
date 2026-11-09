@@ -105,7 +105,12 @@ export const scoreRequestSchema = z.object({
     .optional(),
   trend: z.enum(["up", "flat", "down", "涨", "平", "跌"]).optional(),
   lookup_tranco: z.boolean().optional(),
-});
+  consent_calibration: z.boolean().optional().default(false),
+  allow_calibration: z.boolean().optional(),
+}).transform((data) => ({
+  ...data,
+  consent_calibration: Boolean(data.consent_calibration || data.allow_calibration),
+}));
 
 export type ScoreRequest = z.infer<typeof scoreRequestSchema>;
 

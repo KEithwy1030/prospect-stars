@@ -54,6 +54,7 @@ export interface PublicScoreResponse {
   disclaimer: string;
   limitations: string[];
   scored_at: string;
+  consent_calibration: boolean;
 }
 
 export const DISCLAIMER =
@@ -116,5 +117,6 @@ export function toPublicResponse(
     disclaimer: DISCLAIMER,
     limitations: LIMITATIONS,
     scored_at: new Date().toISOString(),
+    consent_calibration: Boolean(req.consent_calibration),
   };
 }

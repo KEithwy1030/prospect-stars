@@ -259,6 +259,12 @@ export const openApiDocument = {
             type: "boolean",
             description: "If true, attempt free Tranco rank lookup for hostname-like competitor names / site_url.",
           },
+          consent_calibration: {
+            type: "boolean",
+            default: false,
+            description:
+              "Optional explicit consent to store submission content for calibrating and improving scoring models. Defaults to false (never stored).",
+          },
         },
       },
       ScoreResponse: {
@@ -324,6 +330,10 @@ export const openApiDocument = {
           disclaimer: { type: "string" },
           limitations: { type: "array", items: { type: "string" } },
           scored_at: { type: "string", format: "date-time" },
+          consent_calibration: {
+            type: "boolean",
+            description: "Whether consent was given to store this submission for model calibration.",
+          },
         },
       },
       Error: {

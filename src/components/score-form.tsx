@@ -23,6 +23,7 @@ type FormState = {
   tech_parts: string;
   free_or_ai_substitute: "" | "yes" | "partial" | "no";
   free_or_ai_why: string;
+  consent_calibration: boolean;
 };
 
 const initial: FormState = {
@@ -39,6 +40,7 @@ const initial: FormState = {
   tech_parts: "",
   free_or_ai_substitute: "",
   free_or_ai_why: "",
+  consent_calibration: false,
 };
 
 function parseCompetitors(raw: string) {
@@ -88,6 +90,7 @@ export function ScoreForm() {
         const body: Record<string, unknown> = {
           name: form.name.trim(),
           description: form.description.trim(),
+          consent_calibration: form.consent_calibration,
         };
         if (form.site_url.trim()) body.site_url = form.site_url.trim();
         if (form.price_usd.trim()) body.price_usd = Number(form.price_usd);
@@ -283,6 +286,28 @@ export function ScoreForm() {
               value={form.build_note}
               onChange={(e) => set("build_note", e.target.value)}
             />
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-border/80 bg-background/60 p-4">
+          <div className="flex items-start gap-3">
+            <Checkbox
+              id="consent_calibration"
+              checked={form.consent_calibration}
+              onCheckedChange={(v) => set("consent_calibration", v === true)}
+              className="mt-0.5"
+            />
+            <div className="space-y-1">
+              <Label
+                htmlFor="consent_calibration"
+                className="text-sm font-medium leading-normal cursor-pointer text-foreground"
+              >
+                提交可用于校准评分模型 (Allow submission to be used to calibrate scoring models)
+              </Label>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                默认不存；只有勾选同意后才保存提交内容用于校准与改进评分模型。不勾选也能正常打分（绝不捆绑），并可随时撤回。
+              </p>
+            </div>
           </div>
         </div>
 

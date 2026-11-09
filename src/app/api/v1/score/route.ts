@@ -8,6 +8,7 @@ import {
   toPublicResponse,
 } from "@/lib/scoring";
 import { hostnameFromUrl, lookupTrancoRank } from "@/lib/tranco";
+import { saveCalibrationSubmission } from "@/lib/storage/calibration";
 
 
 export function OPTIONS(req: Request) {
@@ -85,6 +86,13 @@ export async function POST(req: Request) {
     }
 
     const sc = score(product, "pre");
+
+    // Only save submission content for model calibration when explicitly consented.
+    // When consent_calibration is false, submissions are never saved or added to calibration pools.
+    if (parsed.consent_calibration) {
+      await saveCalibrationSubmission(parsed, sc);
+    }
+
     const result = toPublicResponse(parsed, product, sc);
     return withCors(
       Response.json(result, { status: 200, headers: rateHeaders }),
