@@ -172,3 +172,49 @@ export const MAGNITUDE_LABELS: Record<(typeof MAGNITUDE_LEVELS)[number], string>
   around_10k: "Around $10k / year",
   around_100k: "Around $100k+ / year",
 };
+
+export type ExpectedRevenueTier = (typeof MAGNITUDE_LEVELS)[number];
+
+export interface RealityAnchorTierInfo {
+  key: ExpectedRevenueTier;
+  labelZh: string;
+  labelEn: string;
+  share: number;
+  percentageText: string;
+}
+
+export const REALITY_ANCHOR_STATS = {
+  source: "TrustMRR",
+  snapshot_date: "2026-11-10",
+  tiers: {
+    under_1k: {
+      key: "under_1k",
+      labelZh: "不到一千美元",
+      labelEn: "Under $1k / year",
+      share: 0.676,
+      percentageText: "67.6%",
+    },
+    around_1k: {
+      key: "around_1k",
+      labelZh: "一千档",
+      labelEn: "Around $1k / year",
+      share: 0.17,
+      percentageText: "17%",
+    },
+    around_10k: {
+      key: "around_10k",
+      labelZh: "一万档",
+      labelEn: "Around $10k / year",
+      share: 0.103,
+      percentageText: "10.3%",
+    },
+    around_100k: {
+      key: "around_100k",
+      labelZh: "十万以上",
+      labelEn: "Around $100k+ / year",
+      share: 0.05,
+      percentageText: "5%",
+    },
+  } as Record<ExpectedRevenueTier, RealityAnchorTierInfo>,
+} as const;
+

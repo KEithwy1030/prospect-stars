@@ -105,6 +105,27 @@ export const scoreRequestSchema = z.object({
     .optional(),
   trend: z.enum(["up", "flat", "down", "涨", "平", "跌"]).optional(),
   lookup_tranco: z.boolean().optional(),
+  expected_revenue_tier: z
+    .enum([
+      "under_1k",
+      "around_1k",
+      "around_10k",
+      "around_100k",
+      "不到一千",
+      "不到一千美元",
+      "一千档",
+      "一万档",
+      "十万以上",
+    ])
+    .optional()
+    .default("around_10k")
+    .transform((val) => {
+      if (val === "不到一千" || val === "不到一千美元") return "under_1k" as const;
+      if (val === "一千档") return "around_1k" as const;
+      if (val === "一万档") return "around_10k" as const;
+      if (val === "十万以上") return "around_100k" as const;
+      return val as "under_1k" | "around_1k" | "around_10k" | "around_100k";
+    }),
   consent_calibration: z.boolean().optional().default(false),
   allow_calibration: z.boolean().optional(),
 }).transform((data) => ({

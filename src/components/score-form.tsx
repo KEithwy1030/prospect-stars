@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScoreResult } from "@/components/score-result";
+import { RealityAnchor } from "@/components/reality-anchor";
 import type { PublicScoreResponse } from "@/lib/scoring";
 
 type FormState = {
@@ -14,6 +15,7 @@ type FormState = {
   description: string;
   site_url: string;
   price_usd: string;
+  expected_revenue_tier: "under_1k" | "around_1k" | "around_10k" | "around_100k";
   keywords: string;
   has_audience: boolean;
   audience_size: string;
@@ -31,6 +33,7 @@ const initial: FormState = {
   description: "",
   site_url: "",
   price_usd: "",
+  expected_revenue_tier: "around_10k",
   keywords: "",
   has_audience: false,
   audience_size: "",
@@ -90,6 +93,7 @@ export function ScoreForm() {
         const body: Record<string, unknown> = {
           name: form.name.trim(),
           description: form.description.trim(),
+          expected_revenue_tier: form.expected_revenue_tier,
           consent_calibration: form.consent_calibration,
         };
         if (form.site_url.trim()) body.site_url = form.site_url.trim();
@@ -133,8 +137,30 @@ export function ScoreForm() {
     });
   }
 
+  function fillExample() {
+    setForm({
+      name: "NoteClip",
+      description: "Clipboard snippet manager for freelance developers and creators.",
+      site_url: "https://noteclip.example.com",
+      price_usd: "19",
+      expected_revenue_tier: "around_10k",
+      keywords: "clipboard manager, code snippets, notes sync",
+      has_audience: true,
+      audience_size: "1500",
+      audience_type: "newsletter subscribers",
+      competitors: "SnipEase | 29 | 12000\nClipFlow | 19",
+      build_note: "Next.js web app + Stripe checkout + SQLite sync.",
+      tech_parts: "landing_page, payments, accounts",
+      free_or_ai_substitute: "partial",
+      free_or_ai_why: "Basic clipboard is free in OS, but structured search & sync are paid.",
+      consent_calibration: false,
+    });
+  }
+
   return (
-    <div className="space-y-12">
+    <div className="space-y-8">
+      <RealityAnchor />
+
       <form onSubmit={onSubmit} className="space-y-6" noValidate>
         <div className="grid gap-5 sm:grid-cols-2">
           <div className="space-y-2 sm:col-span-2">
@@ -159,7 +185,7 @@ export function ScoreForm() {
               onChange={(e) => set("description", e.target.value)}
             />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 sm:col-span-2">
             <Label htmlFor="site_url">Site URL (optional)</Label>
             <Input
               id="site_url"
@@ -180,6 +206,27 @@ export function ScoreForm() {
               value={form.price_usd}
               onChange={(e) => set("price_usd", e.target.value)}
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="expected_revenue_tier">
+              预期年收入档位 (Expected annual revenue tier)
+            </Label>
+            <select
+              id="expected_revenue_tier"
+              className="h-8 w-full rounded-lg border border-input bg-background px-2.5 text-sm"
+              value={form.expected_revenue_tier}
+              onChange={(e) =>
+                set(
+                  "expected_revenue_tier",
+                  e.target.value as FormState["expected_revenue_tier"],
+                )
+              }
+            >
+              <option value="under_1k">不到一千美元 / 年 (&lt; $1k/yr · 历史 67.6%)</option>
+              <option value="around_1k">一千档 (~$1k/yr · 历史 17%)</option>
+              <option value="around_10k">一万档 (~$10k/yr · 历史 10.3%)</option>
+              <option value="around_100k">十万以上 ($100k+/yr · 历史 5%)</option>
+            </select>
           </div>
           <div className="space-y-2 sm:col-span-2">
             <Label htmlFor="keywords">Keywords (optional, comma-separated)</Label>
@@ -314,6 +361,14 @@ export function ScoreForm() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <Button type="submit" size="lg" disabled={pending} className="min-w-44">
             {pending ? "Scoring…" : "Score this idea"}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            onClick={fillExample}
+          >
+            Try an example (填入示例)
           </Button>
           <p className="text-xs text-muted-foreground">
             No account. Thin evidence lowers the score on purpose — we say when we cannot tell.

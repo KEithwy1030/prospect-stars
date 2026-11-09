@@ -259,6 +259,12 @@ export const openApiDocument = {
             type: "boolean",
             description: "If true, attempt free Tranco rank lookup for hostname-like competitor names / site_url.",
           },
+          expected_revenue_tier: {
+            type: "string",
+            enum: ["under_1k", "around_1k", "around_10k", "around_100k"],
+            default: "around_10k",
+            description: "Expected annual revenue tier to compare against baseline reality anchor.",
+          },
           consent_calibration: {
             type: "boolean",
             default: false,
@@ -330,6 +336,15 @@ export const openApiDocument = {
           disclaimer: { type: "string" },
           limitations: { type: "array", items: { type: "string" } },
           scored_at: { type: "string", format: "date-time" },
+          expected_revenue_tier: {
+            type: "string",
+            enum: ["under_1k", "around_1k", "around_10k", "around_100k"],
+          },
+          expected_revenue_share: { type: "number" },
+          reality_comparison: {
+            type: "string",
+            description: "Comparison sentence showing the historical baseline percentage of the user's expected revenue tier.",
+          },
           consent_calibration: {
             type: "boolean",
             description: "Whether consent was given to store this submission for model calibration.",

@@ -29,6 +29,28 @@ export function ScoreResult({ result }: { result: PublicScoreResponse }) {
         </div>
       </div>
 
+      {/* 现实底数对照句 */}
+      <div
+        className="rounded-xl border border-star/40 bg-star/[0.05] p-4 text-sm"
+        aria-label="Reality comparison"
+      >
+        <div className="flex items-start gap-2.5">
+          <span className="mt-1 inline-block h-2 w-2 shrink-0 rounded-full bg-star" />
+          <div className="space-y-1">
+            <p className="font-medium text-ink">
+              {result.reality_comparison}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Reality benchmark: The user&apos;s expected revenue tier historically accounts for{" "}
+              {result.expected_revenue_share != null
+                ? `${(result.expected_revenue_share * 100).toFixed(1).replace(/\.0$/, "")}%`
+                : "10.3%"}{" "}
+              of indie projects (Source: TrustMRR 2026-11-10 snapshot prior; under $1k: 67.6%, $1k tier: 17%, $10k tier: 10.3%, $100k+: 5%).
+            </p>
+          </div>
+        </div>
+      </div>
+
       {result.magnitude_uncertain ? (
         <Alert className="border-star/40 bg-accent/50">
           <AlertTitle>Revenue magnitude is still unclear</AlertTitle>
@@ -71,6 +93,9 @@ export function ScoreResult({ result }: { result: PublicScoreResponse }) {
             Pre-launch probability across yearly revenue tiers (base rate + same-tier peers +
             distribution shift). Not a forecast.
           </p>
+          <div className="rounded-lg border border-border/70 bg-muted/30 px-3 py-2 text-xs text-foreground/80">
+            {result.reality_comparison}
+          </div>
           <ul className="space-y-2">
             {result.magnitudes.map((m) => (
               <li key={m.key} className="grid grid-cols-[1fr_auto] items-center gap-3 text-sm">

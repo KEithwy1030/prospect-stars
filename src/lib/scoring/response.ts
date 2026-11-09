@@ -14,7 +14,9 @@ import {
   DIM_TO_API,
   MAGNITUDE_LABELS,
   MAGNITUDE_LEVELS,
+  REALITY_ANCHOR_STATS,
   type ApiDimKey,
+  type ExpectedRevenueTier,
 } from "./types";
 
 export interface PublicDimScore {
@@ -49,12 +51,29 @@ export interface PublicScoreResponse {
   dimensions: PublicDimScore[];
   magnitudes: MagnitudeTier[] | null;
   magnitude_uncertain: boolean;
+  expected_revenue_tier: ExpectedRevenueTier;
+  expected_revenue_share: number;
+  reality_comparison: string;
   missing_evidence: string[];
   caps_applied: string[];
   disclaimer: string;
   limitations: string[];
   scored_at: string;
   consent_calibration: boolean;
+}
+
+export function buildRealityComparison(tier?: string): {
+  tier: ExpectedRevenueTier;
+  share: number;
+  text: string;
+} {
+  const normalizedTier = (
+    tier && tier in REALITY_ANCHOR_STATS.tiers ? tier : "around_10k"
+  ) as ExpectedRevenueTier;
+  const stat = REALITY_ANCHOR_STATS.tiers[normalizedTier];
+  const share = stat.share;
+  const text = `对照现实底数：用户预期的收入档位（${stat.labelZh}）在历史上占 ${stat.percentageText}（来源：${REALITY_ANCHOR_STATS.source} ${REALITY_ANCHOR_STATS.snapshot_date} 快照底数）。`;
+  return { tier: normalizedTier, share, text };
 }
 
 export const DISCLAIMER =
@@ -93,6 +112,8 @@ export function toPublicResponse(
     };
   });
 
+  const reality = buildRealityComparison(req.expected_revenue_tier);
+
   return {
     api_version: "v1",
     mode: "pre_launch",
@@ -112,6 +133,9 @@ export function toPublicResponse(
         }))
       : null,
     magnitude_uncertain,
+    expected_revenue_tier: reality.tier,
+    expected_revenue_share: reality.share,
+    reality_comparison: reality.text,
     missing_evidence: missingEvidence(product, sc),
     caps_applied: sc.caps,
     disclaimer: DISCLAIMER,
