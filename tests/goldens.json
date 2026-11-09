@@ -1,0 +1,374 @@
+{
+  "empty_minimal": {
+    "product": {
+      "name": "Blank Idea",
+      "concept": "A vague idea with almost no evidence."
+    },
+    "total": 2.0,
+    "caps": [
+      "收益或需求市场 ≤2 星 → 总分最高 3 星",
+      "推广或性价比 ≤1.5 星 → 总分最高 3 星",
+      "收益和需求都证据不足 → 总分最高 3.5 星"
+    ],
+    "verdict": "不建议做。最弱的是推广难度1.5星、技术难度证据不足。",
+    "dims": {
+      "推广难度": {
+        "star": 1.5,
+        "insuff": false,
+        "brief": "没找到低成本触达渠道；没有粉丝/邮件列表等分发资产",
+        "dist": null
+      },
+      "技术难度": {
+        "star": null,
+        "insuff": true,
+        "brief": "没写技术部件和理由",
+        "dist": null
+      },
+      "需求市场": {
+        "star": null,
+        "insuff": true,
+        "brief": "没有搜索量真数；没有用户原话；同类没有验证收入",
+        "dist": null
+      },
+      "性价比": {
+        "star": null,
+        "insuff": true,
+        "brief": "没写免费/AI 能不能替代",
+        "dist": null
+      },
+      "价格": {
+        "star": null,
+        "insuff": true,
+        "brief": "同类没有能核对的标价",
+        "dist": null
+      },
+      "收益": {
+        "star": 2.0,
+        "insuff": true,
+        "brief": "没有同级竞品的验证收入（证据不足）；没有分发优势；最可能不到一千（68%）",
+        "dist": [
+          0.6766766766766767,
+          0.1701701701701702,
+          0.1031031031031031,
+          0.050050050050050046
+        ]
+      }
+    }
+  },
+  "prelaunch_thin": {
+    "product": {
+      "name": "Thin SaaS",
+      "concept": "Keyword research helper for indie founders.",
+      "price": {
+        "tiers": [
+          29
+        ],
+        "src": "planned"
+      },
+      "keywords": [
+        {
+          "keyword": "keyword research tool",
+          "volume": "1200",
+          "allintitle": 80
+        }
+      ],
+      "free_or_ai_substitute": {
+        "answer": "部分能",
+        "why": "ChatGPT can draft keyword lists but not track ranks.",
+        "src": "manual"
+      },
+      "paid_comps": [
+        {
+          "name": "Ahrefs Lite",
+          "price_low_usd": 99,
+          "tier": "头部",
+          "tranco": {
+            "rank": 12000,
+            "date": "2026-11-01",
+            "src": "tranco"
+          }
+        }
+      ],
+      "tech": {
+        "parts": [
+          "落地页",
+          "用户账户/订阅",
+          "调用大模型"
+        ],
+        "why": "Next.js app + LLM for suggestions",
+        "src": "plan"
+      },
+      "distribution": {
+        "channels": [],
+        "assets": []
+      }
+    },
+    "total": 2.5,
+    "caps": [
+      "收益或需求市场 ≤2 星 → 总分最高 3 星",
+      "推广或性价比 ≤1.5 星 → 总分最高 3 星"
+    ],
+    "verdict": "前景偏弱，只值得花时间小试。最弱的是推广难度1.5星、价格2星。",
+    "dims": {
+      "推广难度": {
+        "star": 1.5,
+        "insuff": false,
+        "brief": "没找到低成本触达渠道；没有粉丝/邮件列表等分发资产；同类有大站在抢",
+        "dist": null
+      },
+      "技术难度": {
+        "star": 4.5,
+        "insuff": false,
+        "brief": "没有难做的部件",
+        "dist": null
+      },
+      "需求市场": {
+        "star": 4.0,
+        "insuff": false,
+        "brief": "搜索每月约 1,200 次；没有用户原话；同类没有验证收入",
+        "dist": null
+      },
+      "性价比": {
+        "star": 3.0,
+        "insuff": false,
+        "brief": "免费/AI 部分能直接替代；我们 $29、同类起步中位 $99",
+        "dist": null
+      },
+      "价格": {
+        "star": 2.0,
+        "insuff": false,
+        "brief": "同类价 $99–$99，我们最低 $29；还没测过价",
+        "dist": null
+      },
+      "收益": {
+        "star": 2.0,
+        "insuff": true,
+        "brief": "没有同级竞品的验证收入（证据不足）；没有分发优势；最可能不到一千（68%）",
+        "dist": [
+          0.6766766766766767,
+          0.1701701701701702,
+          0.1031031031031031,
+          0.050050050050050046
+        ]
+      }
+    }
+  },
+  "prelaunch_strong": {
+    "product": {
+      "name": "Audience Tool",
+      "concept": "Pricing page analyzer for SaaS founders with an existing newsletter.",
+      "price": {
+        "tiers": [
+          49,
+          99
+        ],
+        "src": "planned"
+      },
+      "keywords": [
+        {
+          "keyword": "saas pricing page",
+          "volume": "2400",
+          "allintitle": 40,
+          "cpc_low": 1.2,
+          "cpc_high": 3.5
+        },
+        {
+          "keyword": "pricing page analyzer",
+          "volume": "880",
+          "allintitle": 12,
+          "cpc_low": 0.8,
+          "cpc_high": 2.0
+        }
+      ],
+      "free_or_ai_substitute": {
+        "answer": "否",
+        "why": "Needs structured crawl + competitor price DB.",
+        "src": "manual"
+      },
+      "pain_evidence": [
+        {
+          "kind": "愿付钱",
+          "people": 4,
+          "fact": "Founders said they would pay for competitor price digests",
+          "src": "reddit threads"
+        },
+        {
+          "kind": "抱怨",
+          "people": 8,
+          "fact": "People complain about manually checking pricing pages",
+          "src": "indie hackers"
+        }
+      ],
+      "paid_comps": [
+        {
+          "name": "PriceIntello",
+          "price_low_usd": 79,
+          "tier": "同级",
+          "verified_annual_usd": 48000,
+          "verified_note": "founder tweet",
+          "tranco": {
+            "rank": 420000,
+            "date": "2026-11-01",
+            "src": "tranco"
+          }
+        },
+        {
+          "name": "CompWatch",
+          "price_low_usd": 39,
+          "tier": "同级",
+          "verified_annual_usd": 12000,
+          "tranco": {
+            "rank": 900000,
+            "date": "2026-11-01",
+            "src": "tranco"
+          }
+        }
+      ],
+      "tech": {
+        "parts": [
+          "落地页",
+          "抓取公开网页",
+          "生成报告",
+          "支付接入"
+        ],
+        "why": "Static crawl + report PDF + Stripe",
+        "src": "plan"
+      },
+      "distribution": {
+        "channels": [
+          {
+            "what": "Own newsletter to SaaS founders",
+            "src": "beehiiv"
+          },
+          {
+            "what": "SEO for pricing-page keywords",
+            "src": "keyword planner"
+          }
+        ],
+        "assets": [
+          {
+            "what": "Email list",
+            "size": 12000,
+            "at_launch": "是",
+            "src": "beehiiv export"
+          }
+        ],
+        "proven_channels": [
+          {
+            "what": "Newsletter launch sold prior product",
+            "src": "stripe"
+          }
+        ]
+      },
+      "trend": {
+        "direction": "涨",
+        "src": "google trends"
+      }
+    },
+    "total": 4.0,
+    "caps": [],
+    "verdict": "前景好，值得认真做。最弱的是性价比3.5星、价格3.5星。",
+    "dims": {
+      "推广难度": {
+        "star": 5.0,
+        "insuff": false,
+        "brief": "有 2 个低成本触达渠道；有能核对的分发优势（2 档）",
+        "dist": null
+      },
+      "技术难度": {
+        "star": 4.0,
+        "insuff": false,
+        "brief": "没有难做的部件",
+        "dist": null
+      },
+      "需求市场": {
+        "star": 4.0,
+        "insuff": false,
+        "brief": "搜索每月约 3,280 次；痛点 8 条抱怨、4 条愿付钱；同类最高验证收入约 $48,000/年",
+        "dist": null
+      },
+      "性价比": {
+        "star": 3.5,
+        "insuff": false,
+        "brief": "免费/AI 不能直接替代；我们 $49、同类起步中位 $59",
+        "dist": null
+      },
+      "价格": {
+        "star": 3.5,
+        "insuff": false,
+        "brief": "同类价 $39–$79，我们最低 $49；还没测过价",
+        "dist": null
+      },
+      "收益": {
+        "star": 4.5,
+        "insuff": false,
+        "brief": "同级竞品验证收入 2 家；分发优势 2 档；最可能十万级（52%）",
+        "dist": [
+          0.0,
+          0.0,
+          0.4832022873481058,
+          0.5167977126518941
+        ]
+      }
+    }
+  },
+  "insufficient_everywhere": {
+    "product": {
+      "name": "No Evidence",
+      "concept": "Something something AI.",
+      "free_or_ai_substitute": {
+        "answer": "UNKNOWN"
+      }
+    },
+    "total": 2.0,
+    "caps": [
+      "收益或需求市场 ≤2 星 → 总分最高 3 星",
+      "推广或性价比 ≤1.5 星 → 总分最高 3 星",
+      "收益和需求都证据不足 → 总分最高 3.5 星"
+    ],
+    "verdict": "不建议做。最弱的是推广难度1.5星、技术难度证据不足。",
+    "dims": {
+      "推广难度": {
+        "star": 1.5,
+        "insuff": false,
+        "brief": "没找到低成本触达渠道；没有粉丝/邮件列表等分发资产",
+        "dist": null
+      },
+      "技术难度": {
+        "star": null,
+        "insuff": true,
+        "brief": "没写技术部件和理由",
+        "dist": null
+      },
+      "需求市场": {
+        "star": null,
+        "insuff": true,
+        "brief": "没有搜索量真数；没有用户原话；同类没有验证收入",
+        "dist": null
+      },
+      "性价比": {
+        "star": null,
+        "insuff": true,
+        "brief": "没写免费/AI 能不能替代",
+        "dist": null
+      },
+      "价格": {
+        "star": null,
+        "insuff": true,
+        "brief": "同类没有能核对的标价",
+        "dist": null
+      },
+      "收益": {
+        "star": 2.0,
+        "insuff": true,
+        "brief": "没有同级竞品的验证收入（证据不足）；没有分发优势；最可能不到一千（68%）",
+        "dist": [
+          0.6766766766766767,
+          0.1701701701701702,
+          0.1031031031031031,
+          0.050050050050050046
+        ]
+      }
+    }
+  }
+}
