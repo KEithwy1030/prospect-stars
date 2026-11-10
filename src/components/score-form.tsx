@@ -38,6 +38,10 @@ export type FormState = {
   free_or_ai_substitute: "" | "yes" | "partial" | "no";
   free_or_ai_why: string;
   consent_calibration: boolean;
+  consent_followup: boolean;
+  consent_followup_6m: boolean;
+  consent_followup_12m: boolean;
+  followup_contact: string;
 };
 
 const initial: FormState = {
@@ -62,6 +66,10 @@ const initial: FormState = {
   free_or_ai_substitute: "",
   free_or_ai_why: "",
   consent_calibration: false,
+  consent_followup: false,
+  consent_followup_6m: false,
+  consent_followup_12m: false,
+  followup_contact: "",
 };
 
 function parseCompetitors(raw: string) {
@@ -113,7 +121,19 @@ export function ScoreForm() {
           description: form.description.trim(),
           expected_revenue_tier: form.expected_revenue_tier,
           consent_calibration: form.consent_calibration,
+          consent_followup: form.consent_followup,
         };
+        if (form.consent_followup) {
+          body.consent_followup_6m = form.consent_followup_6m;
+          body.consent_followup_12m = form.consent_followup_12m;
+          const intervals: string[] = [];
+          if (form.consent_followup_6m) intervals.push("6m");
+          if (form.consent_followup_12m) intervals.push("12m");
+          if (intervals.length) body.followup_intervals = intervals;
+          if (form.followup_contact.trim()) {
+            body.followup_contact = form.followup_contact.trim();
+          }
+        }
         if (form.idea_source) body.idea_source = form.idea_source;
         if (form.site_url.trim()) body.site_url = form.site_url.trim();
         if (form.price_usd.trim()) body.price_usd = Number(form.price_usd);
@@ -219,6 +239,10 @@ export function ScoreForm() {
       free_or_ai_substitute: "partial",
       free_or_ai_why: "Basic clipboard is free in OS, but structured search & sync are paid.",
       consent_calibration: false,
+      consent_followup: false,
+      consent_followup_6m: false,
+      consent_followup_12m: false,
+      followup_contact: "",
     });
   }
 
@@ -671,6 +695,92 @@ export function ScoreForm() {
               </Label>
               <p className="text-xs leading-relaxed text-muted-foreground">
                 默认不存；只有勾选同意后才保存提交内容用于校准与改进评分模型。不勾选也能正常打分（绝不捆绑），并可随时撤回。
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-border/80 bg-background/60 p-4 space-y-3">
+          <div className="flex items-start gap-3">
+            <Checkbox
+              id="consent_followup"
+              checked={form.consent_followup}
+              onCheckedChange={(v) => {
+                const checked = v === true;
+                setForm((f) => ({
+                  ...f,
+                  consent_followup: checked,
+                  consent_followup_6m: checked,
+                  consent_followup_12m: checked,
+                }));
+              }}
+              className="mt-0.5"
+            />
+            <div className="space-y-1">
+              <Label
+                htmlFor="consent_followup"
+                className="text-sm font-medium leading-normal cursor-pointer text-foreground"
+              >
+                同意 6 个月 / 12 个月后回访 (Agree to 6 / 12-month follow-up)
+              </Label>
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                选填。用于在 6 / 12 个月后进行极简进展回访（核对成活与商业化进展以校准模型）。不勾选绝不影响打分。
+              </p>
+            </div>
+          </div>
+
+          <div className="pl-7 space-y-3 pt-1 border-t border-border/40">
+            <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+              <span className="text-foreground/80 font-medium">回访周期 (选填 · 单独勾选)：</span>
+              <label className="flex items-center gap-1.5 cursor-pointer">
+                <Checkbox
+                  id="consent_followup_6m"
+                  checked={form.consent_followup_6m}
+                  onCheckedChange={(v) => {
+                    const c6 = v === true;
+                    setForm((f) => ({
+                      ...f,
+                      consent_followup_6m: c6,
+                      consent_followup: c6 || f.consent_followup_12m,
+                    }));
+                  }}
+                />
+                <span>6 个月后 (6 months)</span>
+              </label>
+              <label className="flex items-center gap-1.5 cursor-pointer">
+                <Checkbox
+                  id="consent_followup_12m"
+                  checked={form.consent_followup_12m}
+                  onCheckedChange={(v) => {
+                    const c12 = v === true;
+                    setForm((f) => ({
+                      ...f,
+                      consent_followup_12m: c12,
+                      consent_followup: f.consent_followup_6m || c12,
+                    }));
+                  }}
+                />
+                <span>12 个月后 (12 months)</span>
+              </label>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label
+                htmlFor="followup_contact"
+                className="text-xs font-medium text-foreground"
+              >
+                联系方式 (Contact info · 选填，仅用于回访)
+              </Label>
+              <Input
+                id="followup_contact"
+                type="text"
+                placeholder="邮箱 / 微信 / X (Twitter) / Telegram 等（选填）"
+                value={form.followup_contact}
+                onChange={(e) => set("followup_contact", e.target.value)}
+                className="text-sm"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                仅用于回访联系，绝不公开；不留联系方式或不同意回访也能正常打分。
               </p>
             </div>
           </div>

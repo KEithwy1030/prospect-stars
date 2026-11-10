@@ -154,10 +154,73 @@ export const scoreRequestSchema = z.object({
     }),
   consent_calibration: z.boolean().optional().default(false),
   allow_calibration: z.boolean().optional(),
-}).transform((data) => ({
-  ...data,
-  consent_calibration: Boolean(data.consent_calibration || data.allow_calibration),
-}));
+  consent_followup: z.boolean().optional().default(false),
+  consent_followup_6m: z.boolean().optional(),
+  consent_followup_12m: z.boolean().optional(),
+  followup_consent: z.boolean().optional(),
+  followup_intervals: z
+    .union([z.array(z.string().max(20)), z.string().max(50)])
+    .optional(),
+  followup_contact: z.string().max(200).optional(),
+  contact: z.string().max(200).optional(),
+  followup: z
+    .object({
+      consent: z.boolean().optional(),
+      consent_6m: z.boolean().optional(),
+      consent_12m: z.boolean().optional(),
+      intervals: z.array(z.string().max(20)).optional(),
+      contact: z.string().max(200).optional(),
+    })
+    .optional(),
+}).transform((data) => {
+  const consent_6m = Boolean(
+    data.consent_followup_6m ||
+      data.followup?.consent_6m ||
+      (Array.isArray(data.followup_intervals) && data.followup_intervals.includes("6m")) ||
+      (typeof data.followup_intervals === "string" && data.followup_intervals.includes("6m"))
+  );
+  const consent_12m = Boolean(
+    data.consent_followup_12m ||
+      data.followup?.consent_12m ||
+      (Array.isArray(data.followup_intervals) && data.followup_intervals.includes("12m")) ||
+      (typeof data.followup_intervals === "string" && data.followup_intervals.includes("12m"))
+  );
+  const consent_followup = Boolean(
+    data.consent_followup ||
+      data.followup_consent ||
+      data.followup?.consent ||
+      consent_6m ||
+      consent_12m
+  );
+
+  let rawContact =
+    data.followup_contact || data.contact || data.followup?.contact || "";
+  rawContact = rawContact.trim();
+  const followup_contact = consent_followup && rawContact ? rawContact : undefined;
+
+  let intervals: string[] = [];
+  if (Array.isArray(data.followup_intervals)) {
+    intervals = data.followup_intervals;
+  } else if (typeof data.followup_intervals === "string") {
+    intervals = data.followup_intervals.split(",").map((s) => s.trim()).filter(Boolean);
+  } else if (data.followup?.intervals) {
+    intervals = data.followup.intervals;
+  } else if (consent_followup) {
+    if (consent_6m) intervals.push("6m");
+    if (consent_12m) intervals.push("12m");
+    if (!consent_6m && !consent_12m) intervals.push("6m", "12m");
+  }
+
+  return {
+    ...data,
+    consent_calibration: Boolean(data.consent_calibration || data.allow_calibration),
+    consent_followup,
+    consent_followup_6m: consent_followup ? (consent_6m || (!consent_6m && !consent_12m)) : false,
+    consent_followup_12m: consent_followup ? (consent_12m || (!consent_6m && !consent_12m)) : false,
+    followup_intervals: consent_followup ? intervals : [],
+    followup_contact,
+  };
+});
 
 export type ScoreRequest = z.infer<typeof scoreRequestSchema>;
 

@@ -302,6 +302,29 @@ export const openApiDocument = {
             description:
               "Optional explicit consent to store submission content for calibrating and improving scoring models. Defaults to false (never stored).",
           },
+          consent_followup: {
+            type: "boolean",
+            default: false,
+            description:
+              "Optional explicit consent to participate in a 6- or 12-month follow-up survey to track actual project survival and revenue milestones.",
+          },
+          consent_followup_6m: {
+            type: "boolean",
+            description: "Optional explicit consent for 6-month follow-up.",
+          },
+          consent_followup_12m: {
+            type: "boolean",
+            description: "Optional explicit consent for 12-month follow-up.",
+          },
+          followup_intervals: {
+            type: "array",
+            items: { type: "string" },
+            description: "Selected follow-up milestone intervals, e.g. ['6m', '12m'].",
+          },
+          followup_contact: {
+            type: "string",
+            description: "Optional contact info (email, WeChat, Twitter handle, etc.) used solely for follow-up.",
+          },
         },
       },
       ScoreResponse: {
@@ -409,6 +432,28 @@ export const openApiDocument = {
           consent_calibration: {
             type: "boolean",
             description: "Whether consent was given to store this submission for model calibration.",
+          },
+          consent_followup: {
+            type: "boolean",
+            description: "Whether consent was given to participate in follow-up surveys.",
+          },
+          consent_followup_6m: {
+            type: "boolean",
+            description: "Whether 6-month follow-up was consented.",
+          },
+          consent_followup_12m: {
+            type: "boolean",
+            description: "Whether 12-month follow-up was consented.",
+          },
+          followup_intervals: {
+            type: "array",
+            items: { type: "string" },
+            description: "Follow-up intervals agreed to.",
+          },
+          followup_contact: {
+            type: "string",
+            nullable: true,
+            description: "Contact information provided for follow-up (null when not provided or not consented).",
           },
         },
       },

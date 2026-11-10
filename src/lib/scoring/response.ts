@@ -70,6 +70,18 @@ export interface PublicScoreResponse {
   limitations: string[];
   scored_at: string;
   consent_calibration: boolean;
+  consent_followup: boolean;
+  consent_followup_6m: boolean;
+  consent_followup_12m: boolean;
+  followup_intervals: string[];
+  followup_contact: string | null;
+  followup: {
+    consent: boolean;
+    consent_6m: boolean;
+    consent_12m: boolean;
+    intervals: string[];
+    contact: string | null;
+  };
 }
 
 export function buildRealityComparison(tier?: string): {
@@ -160,5 +172,17 @@ export function toPublicResponse(
     limitations: LIMITATIONS,
     scored_at: new Date().toISOString(),
     consent_calibration: Boolean(req.consent_calibration),
+    consent_followup: Boolean(req.consent_followup),
+    consent_followup_6m: Boolean(req.consent_followup_6m),
+    consent_followup_12m: Boolean(req.consent_followup_12m),
+    followup_intervals: req.consent_followup ? (req.followup_intervals ?? []) : [],
+    followup_contact: req.consent_followup ? (req.followup_contact || null) : null,
+    followup: {
+      consent: Boolean(req.consent_followup),
+      consent_6m: Boolean(req.consent_followup_6m),
+      consent_12m: Boolean(req.consent_followup_12m),
+      intervals: req.consent_followup ? (req.followup_intervals ?? []) : [],
+      contact: req.consent_followup ? (req.followup_contact || null) : null,
+    },
   };
 }

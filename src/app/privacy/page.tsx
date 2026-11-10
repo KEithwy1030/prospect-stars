@@ -27,6 +27,12 @@ export default function PrivacyPage() {
           consent never affects scoring.
         </p>
         <p>
+          <strong>Follow-up Consent & Contact Info (回访同意与联系方式).</strong> 选填项。若您单独勾选同意在 6 个月 / 12 个月后接受回访并留下联系方式，相关信息仅用于未来跟进产品实际成活与商业化进展以校准模型；不勾选或不留联系方式绝不影响打分。
+        </p>
+        <p className="text-muted-foreground">
+          <em>English reference:</em> Follow-up consent is entirely optional. If you explicitly opt in to 6 / 12-month follow-up and provide contact information, it is used solely for checking actual product survival and milestone progress; opting out never affects your score.
+        </p>
+        <p>
           Server logs may retain standard request metadata (time, IP, path, status) for rate
           limiting, abuse prevention, and reliability. We do not operate a public archive of ideas.
         </p>

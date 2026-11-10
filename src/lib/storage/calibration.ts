@@ -28,6 +28,11 @@ export interface CalibrationEntry {
     trend_src?: string;
     payments?: unknown;
     idea_source?: string;
+    consent_followup?: boolean;
+    consent_followup_6m?: boolean;
+    consent_followup_12m?: boolean;
+    followup_intervals?: string[];
+    followup_contact?: string;
   };
   score_summary: {
     overall_stars: number;
@@ -69,6 +74,11 @@ export async function saveCalibrationSubmission(
       trend_src: req.trend_src,
       payments: req.payments,
       idea_source: req.idea_source,
+      consent_followup: req.consent_followup,
+      consent_followup_6m: req.consent_followup_6m,
+      consent_followup_12m: req.consent_followup_12m,
+      followup_intervals: req.followup_intervals,
+      followup_contact: req.followup_contact,
     },
     score_summary: {
       overall_stars: sc.total,
