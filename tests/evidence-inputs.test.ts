@@ -4,7 +4,6 @@ import {
   requestToProduct,
   score,
   scoreRequestSchema,
-  toPublicResponse,
 } from "@/lib/scoring";
 
 describe("Issue #3: Evidence Inputs Contract & Acceptance", () => {

@@ -4,13 +4,17 @@
  * Reason strings are English for the public product.
  */
 import baseRate from "@/data/base-rate.json";
-import type {
-  DimKey,
-  DimResult,
-  FunnelEstimate,
-  Mode,
-  Product,
-  ScoreResult,
+import {
+  API_DIM_LABELS,
+  DIM_TO_API,
+  type DimKey,
+  type DimResult,
+  type EvidenceLevel,
+  type FunnelEstimate,
+  type Mode,
+  type Product,
+  type ScoreResult,
+  type WeakestDimensionInfo,
 } from "./types";
 
 export const U = "UNKNOWN";
@@ -552,7 +556,6 @@ export function dimValue(
 export function dimPrice(
   p: Product,
   mode: Mode,
-  _e: FunnelEstimate | null | undefined,
 ): [number | null, string[], boolean] {
   const comps = p.paid_comps || [];
   const band = comps
@@ -782,7 +785,7 @@ export function score(
     ds["性价比"] = { star: s, why: w, insuff: i };
   }
   {
-    const [s, w, i] = dimPrice(p, mode, e);
+    const [s, w, i] = dimPrice(p, mode);
     ds["价格"] = { star: s, why: w, insuff: i };
   }
   {
@@ -822,7 +825,214 @@ export function shortReason(d: DimResult): string {
   return d.why[0] || "";
 }
 
-export function verdict(sc: ScoreResult): string {
+export const CHEAPEST_EXPERIMENTS: Record<DimKey, { zh: string; en: string }> = {
+  收益: {
+    zh: "找 3 个陌生人先收定金（预收 $5–$20 订金或意向金），验证是否真有人掏钱，或贴 1 条同级竞品的公开已验证年收入链接。",
+    en: "Presell to 3 strangers with a small deposit ($5–$20) to confirm real willingness to pay, or find 1 verified annual revenue link from a same-tier peer.",
+  },
+  需求市场: {
+    zh: "在社交平台（Reddit/推特/行业社区）贴 3 条目标用户真实的抱怨或求助原话链接，并查 1 个核心词的真实月搜索量。",
+    en: "Collect 3 direct pain/complaint quote links from target users on Reddit, X, or niche forums, and verify monthly search volume for 1 core keyword.",
+  },
+  推广难度: {
+    zh: "找到 1 个能免费触达目标用户的低成本垂直渠道（如相关社区发帖或已有精准受众），测试能否拿到前 50 次真实精准点击。",
+    en: "Post in 1 relevant community or niche channel to test if you can drive 50 targeted clicks without ad spend.",
+  },
+  性价比: {
+    zh: "把方案与现有免费工具/AI 列出 1 页纸对比表，找 3 个目标用户询问：若免费工具能满足 70%，是否仍愿为你的产品付费。",
+    en: "Create a 1-page comparison against free tools / AI, and ask 3 target users if they would still pay for your edge when free tools cover 70%.",
+  },
+  价格: {
+    zh: "上线一个带具体标价的极简预售页或等待名单按钮（如 Gumroad/Stripe 测价链接），测试陌生人看到定价后的真实点击转化。",
+    en: "Publish a minimal landing page with your exact target price and a pre-order/waitlist button to test stranger conversion at that price point.",
+  },
+  技术难度: {
+    zh: "拆解核心业务流，用现有现成 API 或无代码/开源模版在 24 小时内做出极简可跑通原型，砍掉所有非核心的重开发部件。",
+    en: "Build a 24-hour prototype using off-the-shelf APIs or templates, cutting all non-essential heavy engineering components.",
+  },
+};
+
+export function isSourceUrl(src?: string | null): boolean {
+  if (!src) return false;
+  const s = src.trim().toLowerCase();
+  return (
+    s.startsWith("http://") ||
+    s.startsWith("https://") ||
+    s.startsWith("www.") ||
+    /(?:https?:\/\/|www\.)\S+/.test(s)
+  );
+}
+
+export function determineEvidenceLevel(
+  dim: DimKey,
+  p: Product,
+  d: DimResult,
+  mode: Mode,
+): EvidenceLevel {
+  switch (dim) {
+    case "推广难度": {
+      const dist = p.distribution || {};
+      const chs = (dist.channels || []).filter((c) => preOk(c, mode));
+      const assets = (dist.assets || []).filter((a) => preOk(a, mode));
+      const proven = (dist.proven_channels || []).filter((c) => preOk(c, mode));
+      const track = (dist.track_record || []).filter((t) => preOk(t, mode));
+
+      const hasUrl =
+        chs.some((c) => isSourceUrl(c.src)) ||
+        assets.some((a) => isSourceUrl(a.src)) ||
+        proven.some((c) => isSourceUrl(c.src)) ||
+        track.some((t) => isSourceUrl(t.src));
+      if (hasUrl) return "有来源链接";
+
+      const hasUserItems =
+        chs.length > 0 ||
+        assets.some((a) => num(a.size) !== null && num(a.size)! > 0) ||
+        proven.length > 0 ||
+        track.length > 0;
+      if (hasUserItems) return "用户自填";
+
+      return "假设";
+    }
+
+    case "技术难度": {
+      const t = p.tech || {};
+      const parts = t.parts || [];
+      if (!parts.length || !t.why || d.insuff) {
+        return "假设";
+      }
+      if (isSourceUrl(t.src)) return "有来源链接";
+      if (parts.length > 0 || t.why) return "用户自填";
+      return "假设";
+    }
+
+    case "需求市场": {
+      if (d.insuff) return "假设";
+      const pe = p.pain_evidence || [];
+      const comps = p.paid_comps || [];
+      const tr = p.trend || {};
+      const hasUrl =
+        pe.some((x) => isSourceUrl(x.src)) ||
+        comps.some((c) => isSourceUrl(c.src) || isSourceUrl(c.tranco?.src)) ||
+        isSourceUrl(p.keywords_src) ||
+        isSourceUrl(tr.src);
+      if (hasUrl) return "有来源链接";
+
+      const hasQuotes = pe.some((x) => (x.fact && x.fact.trim()) || num(x.people));
+      const hasVerifiedComps = comps.some((c) => num(c.verified_annual_usd) !== null);
+      const hasTrend = Boolean(tr.direction && tr.direction !== U);
+      if (hasQuotes || hasVerifiedComps || hasTrend) return "用户自填";
+
+      const vs = (p.keywords || []).map(vol).filter((v): v is number => v !== null);
+      if (vs.length > 0 || comps.some((c) => c.tranco)) return "推算";
+
+      return "假设";
+    }
+
+    case "性价比": {
+      if (d.insuff) return "假设";
+      const fs = p.free_or_ai_substitute || {};
+      const ca = (p.distribution || {}).comp_cpa || {};
+      if (isSourceUrl(fs.src) || isSourceUrl(ca.src)) return "有来源链接";
+
+      const pr = minPrice(p);
+      const cp = (p.paid_comps || [])
+        .map((c) => num(c.price_low_usd))
+        .filter((x): x is number => x !== null);
+      if (pr !== null && cp.length > 0) return "推算";
+      const cpc = cpcMid(p);
+      if (cpc !== null && pr !== null) return "推算";
+
+      if (fs.answer) return "用户自填";
+      return "假设";
+    }
+
+    case "价格": {
+      if (d.insuff) return "假设";
+      const comps = p.paid_comps || [];
+      const trials = p.trials || [];
+      const pay = p.payments || {};
+      const hasUrl =
+        comps.some((c) => isSourceUrl(c.src)) ||
+        trials.some((t) => isSourceUrl(t.src)) ||
+        isSourceUrl(pay.src);
+      if (hasUrl) return "有来源链接";
+
+      const pr = minPrice(p);
+      const band = comps
+        .map((c) => num(c.price_low_usd))
+        .filter((x): x is number => x !== null);
+      if (pr !== null && band.length > 0) return "推算";
+
+      if (band.length > 0 || num(pay.stranger_count) !== null) return "用户自填";
+      return "假设";
+    }
+
+    case "收益": {
+      if (d.insuff) return "假设";
+      const comps = p.paid_comps || [];
+      const pay = p.payments || {};
+      const peers = comps.filter(
+        (c) => num(c.verified_annual_usd) !== null && String(c.tier ?? "") === "同级",
+      );
+      const hasUrl =
+        peers.some((c) => isSourceUrl(c.src)) ||
+        isSourceUrl(pay.src);
+      if (hasUrl) return "有来源链接";
+
+      if (peers.length > 0 || num(pay.stranger_count) !== null) return "用户自填";
+
+      return "推算";
+    }
+  }
+}
+
+export function findWeakestDimension(
+  dims: Record<DimKey, DimResult>,
+  evidenceLevels: Record<DimKey, EvidenceLevel>,
+): WeakestDimensionInfo {
+  const evidenceRank: Record<EvidenceLevel, number> = {
+    假设: 0,
+    推算: 1,
+    用户自填: 2,
+    有来源链接: 3,
+  };
+
+  const sorted = [...DIMS].sort((a, b) => {
+    const starA = dims[a].star !== null ? dims[a].star! : INSUFF;
+    const starB = dims[b].star !== null ? dims[b].star! : INSUFF;
+    if (starA !== starB) {
+      return starA - starB;
+    }
+    const evA = evidenceRank[evidenceLevels[a]] ?? 0;
+    const evB = evidenceRank[evidenceLevels[b]] ?? 0;
+    if (evA !== evB) {
+      return evA - evB;
+    }
+    return WEIGHTS[b] - WEIGHTS[a];
+  });
+
+  const weakestKey = sorted[0]!;
+  const d = dims[weakestKey];
+  const apiKey = DIM_TO_API[weakestKey];
+  const evLevel = evidenceLevels[weakestKey];
+  const experiment = `${CHEAPEST_EXPERIMENTS[weakestKey].zh} / ${CHEAPEST_EXPERIMENTS[weakestKey].en}`;
+
+  return {
+    key: apiKey,
+    name: weakestKey,
+    name_zh: weakestKey,
+    name_en: API_DIM_LABELS[apiKey],
+    stars: d.star,
+    stars_display: d.star === null ? "证据不足 (2★)" : starsGlyph(d.star),
+    evidence_level: evLevel,
+    cheapest_experiment: experiment,
+  };
+}
+
+export function verdict(
+  sc: ScoreResult,
+  evidenceLevels?: Partial<Record<DimKey, EvidenceLevel>>,
+): string {
   const t = sc.total;
   const ds = sc.dims;
   const weak = [...DIMS].sort((a, b) => {
@@ -857,10 +1067,40 @@ export function verdict(sc: ScoreResult): string {
   else if (t >= 3) head = "Worth a cheap test — don't spend money yet.";
   else if (t >= 2.5) head = "Weak prospect — only worth a small time-boxed experiment.";
   else head = "Not recommended.";
+
+  // 弱证据在 verdict 里封顶：不许只给高分不讲证据
+  let evidenceCapNotice = "";
+  if (evidenceLevels) {
+    const assumedDims = DIMS.filter((k) => evidenceLevels[k] === "假设");
+    const highUnverifiedDims = DIMS.filter(
+      (k) =>
+        (ds[k].star ?? 0) >= 3.5 &&
+        (evidenceLevels[k] === "假设" || evidenceLevels[k] === "用户自填"),
+    );
+
+    // If any dimension relies on pure assumption, the overall recommendation is capped in verdict
+    if (assumedDims.length > 0) {
+      if (t >= 4) {
+        head =
+          "Promising, but fix the weak spots first (verdict capped: core dimensions rely on unverified assumptions).";
+      } else if (t >= 3.5 && assumedDims.length >= 2) {
+        head =
+          "Worth a cheap test — don't spend money yet (verdict capped: multiple dimensions lack verified evidence).";
+      }
+    }
+
+    if (highUnverifiedDims.length > 0) {
+      const names = highUnverifiedDims
+        .map((k) => `${k} (${evidenceLevels[k]} ${snum(ds[k].star!)})`)
+        .join(", ");
+      evidenceCapNotice = ` Weak-evidence cap: ${names} capped in verdict without source link.`;
+    }
+  }
+
   const tail = unsure
     ? " Revenue magnitude is still unclear across tiers — run a minimal-cost test first."
     : "";
-  return `${head} Weakest: ${weakTxt}.${tail}`;
+  return `${head} Weakest: ${weakTxt}.${tail}${evidenceCapNotice}`;
 }
 
 export function distTxt(dist: number[] | null | undefined): string {

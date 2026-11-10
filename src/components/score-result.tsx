@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import type { PublicScoreResponse } from "@/lib/scoring";
 import { UI_DIM_LABELS } from "@/lib/scoring";
 import { StarRating } from "./star-rating";
@@ -70,9 +71,25 @@ export function ScoreResult({ result }: { result: PublicScoreResponse }) {
           >
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h3 className="font-medium text-foreground">
-                  {UI_DIM_LABELS[d.key] || d.label}
-                </h3>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="font-medium text-foreground">
+                    {UI_DIM_LABELS[d.key] || d.label}
+                  </h3>
+                  <span
+                    className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-xs font-medium ring-1 ring-inset ${
+                      d.evidence_level === "有来源链接"
+                        ? "bg-emerald-50 text-emerald-700 ring-emerald-600/20"
+                        : d.evidence_level === "用户自填"
+                          ? "bg-blue-50 text-blue-700 ring-blue-700/10"
+                          : d.evidence_level === "推算"
+                            ? "bg-amber-50 text-amber-800 ring-amber-600/20"
+                            : "bg-rose-50 text-rose-700 ring-rose-600/20"
+                    }`}
+                    data-testid={`evidence-level-${d.key}`}
+                  >
+                    证据：{d.evidence_level}
+                  </span>
+                </div>
                 <p className="text-xs text-muted-foreground">
                   Weight {(d.weight * 100).toFixed(0)}%
                   {d.insufficient_evidence ? " · counted as 2★" : ""}
@@ -150,6 +167,44 @@ export function ScoreResult({ result }: { result: PublicScoreResponse }) {
             <p className="text-sm text-muted-foreground">No overall caps triggered.</p>
           )}
         </div>
+      </div>
+
+      {/* 底部两行：最弱维度与最便宜的下一步实验 */}
+      {result.weakest_dimension ? (
+        <div
+          className="rounded-xl border border-star/40 bg-star/[0.04] p-5 space-y-3"
+          data-testid="weakest-dimension-card"
+        >
+          <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-2">
+            <span className="font-semibold text-foreground text-sm shrink-0">
+              最弱维度：
+            </span>
+            <span className="text-sm text-foreground font-medium" data-testid="weakest-dimension-name">
+              {result.weakest_dimension.name_zh} / {result.weakest_dimension.name_en}（
+              {result.weakest_dimension.stars_display} · 证据等级：
+              <span className="font-semibold">{result.weakest_dimension.evidence_level}</span>）
+            </span>
+          </div>
+          <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-2">
+            <span className="font-semibold text-foreground text-sm shrink-0">
+              针对它最便宜的一次验证实验：
+            </span>
+            <span className="text-sm text-foreground/90 leading-relaxed" data-testid="cheapest-experiment">
+              {result.weakest_dimension.cheapest_experiment}
+            </span>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border/70 bg-muted/20 px-4 py-3 text-xs text-muted-foreground">
+        <span>想了解六维权重、证据不足按 2 星算与“分不清年入一千与十万”的短板？</span>
+        <Link
+          href="/methodology"
+          className="font-medium text-foreground underline underline-offset-4 hover:text-star transition-colors"
+          data-testid="result-methodology-link"
+        >
+          查看公开打分方法与已知短板 →
+        </Link>
       </div>
 
       <p className="text-xs leading-relaxed text-muted-foreground">{result.disclaimer}</p>

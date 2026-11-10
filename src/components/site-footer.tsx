@@ -9,6 +9,13 @@ export function SiteFooter() {
           <span className="text-foreground">Kaimo</span>
         </p>
         <div className="flex flex-wrap gap-4">
+          <Link
+            href="/methodology"
+            className="hover:text-foreground transition-colors"
+            data-testid="footer-methodology-link"
+          >
+            Methodology (方法与短板)
+          </Link>
           <Link href="/privacy" className="hover:text-foreground transition-colors">
             Privacy
           </Link>

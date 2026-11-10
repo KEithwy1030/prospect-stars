@@ -338,6 +338,10 @@ export const openApiDocument = {
                 label: { type: "string" },
                 stars: { type: ["number", "null"] },
                 stars_display: { type: "string" },
+                evidence_level: {
+                  type: "string",
+                  enum: ["有来源链接", "用户自填", "推算", "假设"],
+                },
                 insufficient_evidence: { type: "boolean" },
                 counted_as: { type: "number" },
                 weight: { type: "number" },
@@ -345,6 +349,32 @@ export const openApiDocument = {
                 summary: { type: "string" },
                 reasons: { type: "array", items: { type: "string" } },
               },
+            },
+          },
+          weakest_dimension: {
+            type: "object",
+            properties: {
+              key: {
+                type: "string",
+                enum: [
+                  "promotion_difficulty",
+                  "technical_difficulty",
+                  "market_demand",
+                  "value",
+                  "price",
+                  "revenue",
+                ],
+              },
+              name: { type: "string" },
+              name_zh: { type: "string" },
+              name_en: { type: "string" },
+              stars: { type: ["number", "null"] },
+              stars_display: { type: "string" },
+              evidence_level: {
+                type: "string",
+                enum: ["有来源链接", "用户自填", "推算", "假设"],
+              },
+              cheapest_experiment: { type: "string" },
             },
           },
           magnitudes: {

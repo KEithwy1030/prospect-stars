@@ -1,5 +1,7 @@
 import {
   DIMS,
+  determineEvidenceLevel,
+  findWeakestDimension,
   INSUFF,
   plain,
   shortReason,
@@ -8,7 +10,13 @@ import {
   WEIGHTS,
 } from "./stars";
 import { missingEvidence, type ScoreRequest } from "./input";
-import type { Product, ScoreResult } from "./types";
+import type {
+  DimKey,
+  EvidenceLevel,
+  Product,
+  ScoreResult,
+  WeakestDimensionInfo,
+} from "./types";
 import {
   API_DIM_LABELS,
   DIM_TO_API,
@@ -24,6 +32,7 @@ export interface PublicDimScore {
   label: string;
   stars: number | null;
   stars_display: string;
+  evidence_level: EvidenceLevel;
   insufficient_evidence: boolean;
   counted_as: number;
   weight: number;
@@ -49,6 +58,7 @@ export interface PublicScoreResponse {
     verdict: string;
   };
   dimensions: PublicDimScore[];
+  weakest_dimension: WeakestDimensionInfo;
   magnitudes: MagnitudeTier[] | null;
   magnitude_uncertain: boolean;
   expected_revenue_tier: ExpectedRevenueTier;
@@ -95,6 +105,11 @@ export function toPublicResponse(
   const magnitude_uncertain =
     dist != null && dist.filter((x) => x >= 0.15).length >= 3;
 
+  const evidenceLevels: Record<DimKey, EvidenceLevel> = {} as Record<DimKey, EvidenceLevel>;
+  for (const k of DIMS) {
+    evidenceLevels[k] = determineEvidenceLevel(k, product, sc.dims[k], sc.mode);
+  }
+
   const dimensions: PublicDimScore[] = DIMS.map((k) => {
     const d = sc.dims[k];
     const key = DIM_TO_API[k];
@@ -103,6 +118,7 @@ export function toPublicResponse(
       label: API_DIM_LABELS[key],
       stars: d.star,
       stars_display: d.star === null ? "insufficient" : starsGlyph(d.star),
+      evidence_level: evidenceLevels[k],
       insufficient_evidence: d.insuff || d.star === null,
       counted_as: d.star !== null ? d.star : INSUFF,
       weight: WEIGHTS[k],
@@ -112,6 +128,7 @@ export function toPublicResponse(
     };
   });
 
+  const weakest_dimension = findWeakestDimension(sc.dims, evidenceLevels);
   const reality = buildRealityComparison(req.expected_revenue_tier);
 
   return {
@@ -122,9 +139,10 @@ export function toPublicResponse(
     overall: {
       stars: sc.total,
       stars_display: starsGlyph(sc.total),
-      verdict: verdict(sc),
+      verdict: verdict(sc, evidenceLevels),
     },
     dimensions,
+    weakest_dimension,
     magnitudes: dist
       ? MAGNITUDE_LEVELS.map((key, i) => ({
           key,

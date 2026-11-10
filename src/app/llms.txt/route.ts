@@ -8,6 +8,7 @@ const BODY = `# Prospect Stars
 
 Website: /
 Human form: / (fill the form on the homepage)
+Methodology: /methodology
 OpenAPI: /api/v1/openapi.json
 Health: /api/v1/health
 Privacy: /privacy

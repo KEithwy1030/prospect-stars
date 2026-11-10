@@ -47,6 +47,7 @@ const competitorSchema = z.object({
   verified_annual_usd: z.number().nonnegative().max(1e9).optional(),
   tier: z.enum(["peer", "incumbent", "同级", "头部"]).optional(),
   tranco_rank: z.number().int().positive().max(1e8).optional(),
+  src: z.string().max(500).optional(),
 });
 
 const keywordSchema = z.union([
@@ -235,7 +236,7 @@ export function requestToProduct(req: ScoreRequest): Product {
       tranco: c.tranco_rank
         ? { rank: c.tranco_rank, src: "user-submitted or Tranco lookup" }
         : undefined,
-      src: "user-submitted",
+      src: c.src || "user-submitted",
     }));
   }
 

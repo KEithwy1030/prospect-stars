@@ -100,11 +100,14 @@ export type DimKey =
   | "价格"
   | "收益";
 
+export type EvidenceLevel = "有来源链接" | "用户自填" | "推算" | "假设";
+
 export interface DimResult {
   star: number | null;
   why: string[];
   insuff: boolean;
   dist?: number[] | null;
+  evidence_level?: EvidenceLevel;
 }
 
 export interface ScoreResult {
@@ -217,4 +220,15 @@ export const REALITY_ANCHOR_STATS = {
     },
   } as Record<ExpectedRevenueTier, RealityAnchorTierInfo>,
 } as const;
+
+export interface WeakestDimensionInfo {
+  key: ApiDimKey;
+  name: string;
+  name_zh: string;
+  name_en: string;
+  stars: number | null;
+  stars_display: string;
+  evidence_level: EvidenceLevel;
+  cheapest_experiment: string;
+}
 
