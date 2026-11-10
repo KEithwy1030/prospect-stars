@@ -38,7 +38,7 @@ Minimum body:
   "description": "One-line what it does"
 }
 
-Useful optional fields: expected_revenue_tier ("under_1k"|"around_1k"|"around_10k"|"around_100k", default "around_10k"), consent_calibration (boolean, default false — whether submission may be used to calibrate scoring models; if false/omitted, nothing is saved), site_url, price_usd, keywords[], has_audience, audience_size, competitors[], tech_parts[], build_note, free_or_ai_substitute ("yes"|"partial"|"no"), low_cost_channels[], pain_evidence[].
+Useful optional fields: expected_revenue_tier ("under_1k"|"around_1k"|"around_10k"|"around_100k", default "around_10k"), consent_calibration (boolean, default false — whether submission may be used to calibrate scoring models; if false/omitted, nothing is saved), idea_source, site_url, price_usd, keywords[], has_audience, audience_size, competitors[], tech_parts[], build_note, free_or_ai_substitute ("yes"|"partial"|"no"), low_cost_channels[], pain_evidence[], payments ({ stranger_count, amount_range }), trend ("up"|"flat"|"down"), trend_src.
 
 Example:
 curl -s -X POST https://HOST/api/v1/score \\

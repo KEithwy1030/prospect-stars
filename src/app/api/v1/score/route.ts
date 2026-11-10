@@ -85,7 +85,31 @@ export async function POST(req: Request) {
       );
     }
 
-    const sc = score(product, "pre");
+    const strangerCount =
+      product.payments?.stranger_count != null
+        ? Number(product.payments.stranger_count)
+        : 0;
+
+    let funnelEstimate: import("@/lib/scoring").FunnelEstimate | null = null;
+    let scoreMode: "pre" | "now" = "pre";
+
+    if (strangerCount >= 1) {
+      scoreMode = "now";
+      const price =
+        (product.price?.tiers && product.price.tiers[0] != null
+          ? Number(product.price.tiers[0])
+          : null) ||
+        (parsed.price_usd != null ? Number(parsed.price_usd) : null) ||
+        29;
+      const annualRev = Math.max(strangerCount * price * 4, strangerCount * price);
+      funnelEstimate = {
+        paid: strangerCount,
+        revenue: annualRev,
+        small_sample: strangerCount < 10,
+      };
+    }
+
+    const sc = score(product, scoreMode, funnelEstimate);
 
     // Only save submission content for model calibration when explicitly consented.
     // When consent_calibration is false, submissions are never saved or added to calibration pools.

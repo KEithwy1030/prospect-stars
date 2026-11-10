@@ -10,13 +10,25 @@ import { ScoreResult } from "@/components/score-result";
 import { RealityAnchor } from "@/components/reality-anchor";
 import type { PublicScoreResponse } from "@/lib/scoring";
 
-type FormState = {
+export type PainEvidenceItem = {
+  id: string;
+  fact: string;
+  src: string;
+};
+
+export type FormState = {
+  idea_source: "" | "已有付费竞品的市场" | "自己痛点出发" | "两者都有";
   name: string;
   description: string;
   site_url: string;
   price_usd: string;
   expected_revenue_tier: "under_1k" | "around_1k" | "around_10k" | "around_100k";
+  stranger_count: "" | "0" | "1-2" | "3+";
+  payment_amount_range: string;
   keywords: string;
+  trend: "" | "涨" | "平" | "跌";
+  trend_src: string;
+  pain_evidence: PainEvidenceItem[];
   has_audience: boolean;
   audience_size: string;
   audience_type: string;
@@ -29,12 +41,18 @@ type FormState = {
 };
 
 const initial: FormState = {
+  idea_source: "",
   name: "",
   description: "",
   site_url: "",
   price_usd: "",
   expected_revenue_tier: "around_10k",
+  stranger_count: "",
+  payment_amount_range: "",
   keywords: "",
+  trend: "",
+  trend_src: "",
+  pain_evidence: [{ id: "p-1", fact: "", src: "" }],
   has_audience: false,
   audience_size: "",
   audience_type: "",
@@ -96,9 +114,44 @@ export function ScoreForm() {
           expected_revenue_tier: form.expected_revenue_tier,
           consent_calibration: form.consent_calibration,
         };
+        if (form.idea_source) body.idea_source = form.idea_source;
         if (form.site_url.trim()) body.site_url = form.site_url.trim();
         if (form.price_usd.trim()) body.price_usd = Number(form.price_usd);
+
+        if (form.stranger_count || form.payment_amount_range.trim()) {
+          const stranger_count =
+            form.stranger_count === "3+"
+              ? 3
+              : form.stranger_count === "1-2"
+                ? 1
+                : form.stranger_count === "0"
+                  ? 0
+                  : undefined;
+          body.payments = {
+            stranger_count,
+            amount_range: form.payment_amount_range.trim() || undefined,
+          };
+        }
+
         if (keywords.length) body.keywords = keywords;
+        if (form.trend) {
+          body.trend = form.trend;
+          if (form.trend_src.trim()) {
+            body.trend_src = form.trend_src.trim();
+          }
+        }
+
+        const validPain = form.pain_evidence
+          .filter((p) => p.fact.trim() || p.src.trim())
+          .map((p) => ({
+            kind: "抱怨" as const,
+            fact: p.fact.trim() || undefined,
+            src: p.src.trim() || undefined,
+          }));
+        if (validPain.length) {
+          body.pain_evidence = validPain;
+        }
+
         if (form.has_audience) {
           body.has_audience = true;
           if (form.audience_size.trim())
@@ -139,12 +192,24 @@ export function ScoreForm() {
 
   function fillExample() {
     setForm({
+      idea_source: "两者都有",
       name: "NoteClip",
       description: "Clipboard snippet manager for freelance developers and creators.",
       site_url: "https://noteclip.example.com",
       price_usd: "19",
       expected_revenue_tier: "around_10k",
+      stranger_count: "3+",
+      payment_amount_range: "$19 - $29",
       keywords: "clipboard manager, code snippets, notes sync",
+      trend: "涨",
+      trend_src: "Google Trends: clipboard manager",
+      pain_evidence: [
+        {
+          id: "p-example",
+          fact: "Developers complain about lost clipboard history and lack of sync across machines",
+          src: "https://news.ycombinator.com/item?id=example",
+        },
+      ],
       has_audience: true,
       audience_size: "1500",
       audience_type: "newsletter subscribers",
@@ -162,6 +227,44 @@ export function ScoreForm() {
       <RealityAnchor />
 
       <form onSubmit={onSubmit} className="space-y-6" noValidate>
+        {/* 表单首题：想法来源三选一 */}
+        <div className="space-y-3 rounded-xl border border-border/80 bg-background/60 p-4">
+          <div className="space-y-1">
+            <Label className="text-sm font-medium text-foreground">
+              想法来源 (Idea origin) · 选填
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              想法最初从何而来？（全部选填，不填不卡提交）
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+            {[
+              { id: "paid_market", label: "已有付费竞品的市场", desc: "市场上已有被验证的付费标杆" },
+              { id: "own_pain", label: "自己痛点出发", desc: "自己工作中切实遇到的强烈痛点" },
+              { id: "both", label: "两者都有", desc: "既有自身切肤之痛，也有竞品在收费" },
+            ].map((opt) => {
+              const selected = form.idea_source === opt.label;
+              return (
+                <button
+                  type="button"
+                  key={opt.id}
+                  onClick={() =>
+                    set("idea_source", selected ? "" : (opt.label as FormState["idea_source"]))
+                  }
+                  className={`flex flex-col items-start rounded-lg border p-3 text-left transition-all cursor-pointer ${
+                    selected
+                      ? "border-primary bg-primary/10 text-primary shadow-xs ring-1 ring-primary/40"
+                      : "border-border/70 bg-background hover:bg-muted/40 text-foreground"
+                  }`}
+                >
+                  <span className="text-sm font-medium">{opt.label}</span>
+                  <span className="mt-1 text-xs text-muted-foreground">{opt.desc}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         <div className="grid gap-5 sm:grid-cols-2">
           <div className="space-y-2 sm:col-span-2">
             <Label htmlFor="name">Idea name *</Label>
@@ -228,6 +331,57 @@ export function ScoreForm() {
               <option value="around_100k">十万以上 ($100k+/yr · 历史 5%)</option>
             </select>
           </div>
+
+          {/* 陌生人付款栏 */}
+          <div className="space-y-3 sm:col-span-2 rounded-xl border border-border/80 bg-background/60 p-4">
+            <div>
+              <Label className="text-sm font-medium text-foreground">
+                陌生人付款栏 (Stranger payments) · 选填
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                已付费陌生人数（0 / 1–2 / 3+ 三档）+ 金额区间。非亲友付费是验证价格成立最关键的真实证据。
+              </p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label className="text-xs">已付费陌生人数</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  {(["0", "1-2", "3+"] as const).map((tier) => {
+                    const selected = form.stranger_count === tier;
+                    const display = tier === "1-2" ? "1–2 人" : tier === "3+" ? "3+ 人" : "0 人";
+                    return (
+                      <button
+                        type="button"
+                        key={tier}
+                        onClick={() =>
+                          set("stranger_count", selected ? "" : tier)
+                        }
+                        className={`h-8 rounded-lg border text-xs font-medium transition-all cursor-pointer ${
+                          selected
+                            ? "border-primary bg-primary/10 text-primary font-semibold ring-1 ring-primary/40 shadow-xs"
+                            : "border-border/70 bg-background hover:bg-muted/40 text-foreground"
+                        }`}
+                      >
+                        {display}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="payment_amount_range" className="text-xs">
+                  金额区间 (选填)
+                </Label>
+                <Input
+                  id="payment_amount_range"
+                  placeholder="如：$19 - $49 或 $29"
+                  value={form.payment_amount_range}
+                  onChange={(e) => set("payment_amount_range", e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
           <div className="space-y-2 sm:col-span-2">
             <Label htmlFor="keywords">Keywords (optional, comma-separated)</Label>
             <Input
@@ -237,6 +391,170 @@ export function ScoreForm() {
               onChange={(e) => set("keywords", e.target.value)}
             />
           </div>
+
+          {/* 趋势方向 */}
+          <div className="space-y-3 sm:col-span-2 rounded-xl border border-border/80 bg-background/60 p-4">
+            <div>
+              <Label className="text-sm font-medium text-foreground">
+                趋势方向 (Market trend) · 选填
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                涨 / 平 / 跌三选一 + 来源。涨/跌将对需求市场维度打分微调 ±0.5★。
+              </p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label className="text-xs">趋势方向三选一</Label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { value: "涨", label: "涨 ↗", desc: "+0.5★" },
+                    { value: "平", label: "平 →", desc: "基准" },
+                    { value: "跌", label: "跌 ↘", desc: "-0.5★" },
+                  ].map((item) => {
+                    const selected = form.trend === item.value;
+                    return (
+                      <button
+                        type="button"
+                        key={item.value}
+                        onClick={() =>
+                          set("trend", selected ? "" : (item.value as FormState["trend"]))
+                        }
+                        className={`h-8 flex items-center justify-center gap-1 rounded-lg border text-xs font-medium transition-all cursor-pointer ${
+                          selected
+                            ? "border-primary bg-primary/10 text-primary font-semibold ring-1 ring-primary/40 shadow-xs"
+                            : "border-border/70 bg-background hover:bg-muted/40 text-foreground"
+                        }`}
+                      >
+                        <span>{item.label}</span>
+                        <span className="text-[10px] text-muted-foreground">({item.desc})</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="trend_src" className="text-xs">
+                  趋势来源 (选填)
+                </Label>
+                <Input
+                  id="trend_src"
+                  placeholder="如：Google Trends 过去 12 个月持续上升、行业研报链接等"
+                  value={form.trend_src}
+                  onChange={(e) => set("trend_src", e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* 抱怨证据栏 */}
+          <div className="space-y-3 sm:col-span-2 rounded-xl border border-border/80 bg-background/60 p-4">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <Label className="text-sm font-medium text-foreground">
+                  抱怨证据栏 (Pain quotes & evidence) · 选填
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  可填多条，每条含原话 + 来源链接；只写“我觉得大家很痛”没有链接的，按证据不足处理。
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setForm((f) => ({
+                    ...f,
+                    pain_evidence: [
+                      ...f.pain_evidence,
+                      { id: `p-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, fact: "", src: "" },
+                    ],
+                  }))
+                }
+                className="h-7 text-xs"
+              >
+                + 添加一条抱怨证据
+              </Button>
+            </div>
+
+            <div className="space-y-3 pt-1">
+              {form.pain_evidence.map((item, index) => {
+                const missingLink = Boolean(item.fact.trim() && !item.src.trim());
+                return (
+                  <div
+                    key={item.id}
+                    className="space-y-2 rounded-lg border border-border/60 bg-muted/20 p-3"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-muted-foreground">
+                        抱怨证据 #{index + 1}
+                      </span>
+                      {form.pain_evidence.length > 1 ? (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setForm((f) => ({
+                              ...f,
+                              pain_evidence: f.pain_evidence.filter((p) => p.id !== item.id),
+                            }))
+                          }
+                          className="text-xs text-muted-foreground hover:text-destructive cursor-pointer"
+                        >
+                          删除
+                        </button>
+                      ) : null}
+                    </div>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <div className="space-y-1">
+                        <Label htmlFor={`pain-fact-${item.id}`} className="text-xs">
+                          用户原话 / 抱怨
+                        </Label>
+                        <Input
+                          id={`pain-fact-${item.id}`}
+                          placeholder="如：'每次手动对比竞品价格都要耗上两小时'"
+                          value={item.fact}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setForm((f) => ({
+                              ...f,
+                              pain_evidence: f.pain_evidence.map((p) =>
+                                p.id === item.id ? { ...p, fact: val } : p,
+                              ),
+                            }));
+                          }}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor={`pain-src-${item.id}`} className="text-xs">
+                          来源链接 (URL)
+                        </Label>
+                        <Input
+                          id={`pain-src-${item.id}`}
+                          type="url"
+                          placeholder="如：https://reddit.com/r/... 或推文链接"
+                          value={item.src}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setForm((f) => ({
+                              ...f,
+                              pain_evidence: f.pain_evidence.map((p) =>
+                                p.id === item.id ? { ...p, src: val } : p,
+                              ),
+                            }));
+                          }}
+                        />
+                      </div>
+                    </div>
+                    {missingLink ? (
+                      <p className="text-xs text-amber-600 dark:text-amber-400">
+                        ⚠️ 提示：只写“我觉得大家很痛”没有链接的，引擎将按证据不足处理（需填入有效来源链接）。
+                      </p>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
           <div className="space-y-3 sm:col-span-2">
             <div className="flex items-center gap-2">
               <Checkbox

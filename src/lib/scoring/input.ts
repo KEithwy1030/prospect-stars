@@ -88,14 +88,19 @@ export const scoreRequestSchema = z.object({
   pain_evidence: z
     .array(
       z.object({
-        kind: z.enum([
-          "complaint",
-          "willing_to_pay",
-          "refusal",
-          "抱怨",
-          "愿付钱",
-          "拒绝",
-        ]),
+        kind: z
+          .enum([
+            "complaint",
+            "willing_to_pay",
+            "refusal",
+            "similar_paid",
+            "抱怨",
+            "愿付钱",
+            "拒绝",
+            "同类付费",
+          ])
+          .optional()
+          .default("抱怨"),
         people: z.number().int().positive().max(10000).optional(),
         fact: z.string().max(400).optional(),
         src: z.string().max(300).optional(),
@@ -103,7 +108,27 @@ export const scoreRequestSchema = z.object({
     )
     .max(20)
     .optional(),
+  payments: z
+    .object({
+      stranger_count: z.union([z.number(), z.string()]).optional(),
+      amounts_usd: z.array(z.union([z.number(), z.string()])).optional(),
+      amount_range: z.string().max(100).optional(),
+      src: z.string().max(300).optional(),
+      note: z.string().max(500).optional(),
+    })
+    .optional(),
   trend: z.enum(["up", "flat", "down", "涨", "平", "跌"]).optional(),
+  trend_src: z.string().max(300).optional(),
+  idea_source: z
+    .enum([
+      "paid_market",
+      "own_pain",
+      "both",
+      "已有付费竞品的市场",
+      "自己痛点出发",
+      "两者都有",
+    ])
+    .optional(),
   lookup_tranco: z.boolean().optional(),
   expected_revenue_tier: z
     .enum([
@@ -143,10 +168,12 @@ function mapSubstitute(v?: string): string | undefined {
   return undefined;
 }
 
-function mapPainKind(k: string): string {
+function mapPainKind(k?: string): string {
+  if (!k) return "抱怨";
   if (k === "complaint" || k === "抱怨") return "抱怨";
   if (k === "willing_to_pay" || k === "愿付钱") return "愿付钱";
   if (k === "refusal" || k === "拒绝") return "拒绝";
+  if (k === "similar_paid" || k === "同类付费") return "同类付费";
   return k;
 }
 
@@ -256,16 +283,48 @@ export function requestToProduct(req: ScoreRequest): Product {
   if (dist.channels || dist.assets) product.distribution = dist;
 
   if (req.pain_evidence?.length) {
-    product.pain_evidence = req.pain_evidence.map((x) => ({
-      kind: mapPainKind(x.kind),
-      people: x.people,
-      fact: x.fact,
-      src: x.src || "user-submitted",
-    }));
+    product.pain_evidence = req.pain_evidence
+      .filter((x) => (x.fact && x.fact.trim()) || (x.src && x.src.trim()))
+      .map((x) => ({
+        kind: mapPainKind(x.kind),
+        people: x.people,
+        fact: x.fact?.trim(),
+        // Only provide src if user actually supplied one; empty src remains undefined
+        // so the scoring engine treats quotes without links as insufficient evidence.
+        src: x.src?.trim() || undefined,
+      }));
   }
 
   const trend = mapTrend(req.trend);
-  if (trend) product.trend = { direction: trend, src: "user-submitted" };
+  if (trend) {
+    product.trend = {
+      direction: trend,
+      src: req.trend_src?.trim() || "user-submitted",
+    };
+  }
+
+  if (req.payments) {
+    let stranger_count: number | undefined;
+    if (typeof req.payments.stranger_count === "number") {
+      stranger_count = req.payments.stranger_count;
+    } else if (typeof req.payments.stranger_count === "string") {
+      const s = req.payments.stranger_count.trim();
+      if (s === "3+" || s === "3") stranger_count = 3;
+      else if (s === "1-2" || s === "1–2" || s === "1" || s === "2") stranger_count = 1;
+      else if (s === "0") stranger_count = 0;
+      else {
+        const parsed = parseInt(s, 10);
+        if (!isNaN(parsed)) stranger_count = parsed;
+      }
+    }
+    const note = [req.payments.amount_range, req.payments.note].filter(Boolean).join(" ");
+    product.payments = {
+      stranger_count,
+      amounts_usd: req.payments.amounts_usd?.map(Number).filter((n) => Number.isFinite(n)),
+      note: note || undefined,
+      src: req.payments.src || "user-submitted",
+    };
+  }
 
   return product;
 }

@@ -25,6 +25,9 @@ export interface CalibrationEntry {
     low_cost_channels?: unknown[];
     pain_evidence?: unknown[];
     trend?: string;
+    trend_src?: string;
+    payments?: unknown;
+    idea_source?: string;
   };
   score_summary: {
     overall_stars: number;
@@ -63,6 +66,9 @@ export async function saveCalibrationSubmission(
       low_cost_channels: req.low_cost_channels,
       pain_evidence: req.pain_evidence,
       trend: req.trend,
+      trend_src: req.trend_src,
+      payments: req.payments,
+      idea_source: req.idea_source,
     },
     score_summary: {
       overall_stars: sc.total,

@@ -228,6 +228,18 @@ export const openApiDocument = {
               },
             },
           },
+          idea_source: {
+            type: "string",
+            enum: [
+              "paid_market",
+              "own_pain",
+              "both",
+              "已有付费竞品的市场",
+              "自己痛点出发",
+              "两者都有",
+            ],
+            description: "Origin of the idea (market with paid competitors, own pain point, or both).",
+          },
           pain_evidence: {
             type: "array",
             items: {
@@ -240,9 +252,11 @@ export const openApiDocument = {
                     "complaint",
                     "willing_to_pay",
                     "refusal",
+                    "similar_paid",
                     "抱怨",
                     "愿付钱",
                     "拒绝",
+                    "同类付费",
                   ],
                 },
                 people: { type: "integer" },
@@ -251,9 +265,26 @@ export const openApiDocument = {
               },
             },
           },
+          payments: {
+            type: "object",
+            properties: {
+              stranger_count: {
+                type: "integer",
+                description: "Count of paying non-friends / strangers (0, 1-2, 3+).",
+              },
+              amount_range: {
+                type: "string",
+                description: "Optional payment price or range paid by strangers.",
+              },
+            },
+          },
           trend: {
             type: "string",
             enum: ["up", "flat", "down", "涨", "平", "跌"],
+          },
+          trend_src: {
+            type: "string",
+            description: "Optional source or evidence supporting the trend.",
           },
           lookup_tranco: {
             type: "boolean",
